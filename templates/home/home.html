@@ -3,12 +3,26 @@
 {% block title %} {{ title }} {% endblock %}
 
 {% block content %}
+<h1>Welcome, {{ user.username }}!</h1>
 
-<div>
-  <div>HEadiong</div>
-  <div>HEadiong</div>
-  <div>HEadiong</div>
-  asdasd
-</div>
+<h1>User List</h1>
+<a href="/add">Add User</a>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>
+    {% for history in histories %}
+    <tr>
+        <td>{{ history[0] }}</td>
+        <td>{{ history[1] }}</td>
+        <td>{{ history[2] }}</td>
+        <td>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 
 {% endblock %}
