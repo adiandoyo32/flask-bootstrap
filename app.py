@@ -80,8 +80,13 @@ def register():
 @login_required
 def home():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM history")
+    query = """
+        SELECT history.*, users.username FROM history
+        LEFT JOIN users ON users.id = history.user_id
+    """
+    cur.execute(query)
     history = cur.fetchall()
+    print(history)
     cur.close()
     return render_template('home/home.html', title="Home", user=current_user, histories=history)
 
@@ -93,10 +98,10 @@ def addUser():
           password = request.form['password']
           port = request.form['port']
           group = request.form['group']
-          print(port)
-          print(group)
+          print('curernt user')
+          print(current_user.username)
           cur = mysql.connection.cursor()
-          cur.execute("INSERT INTO `history` (`username`, `password`, `port`, `group`) VALUES (%s, %s, %s, %s)", (username, password, port, group))
+          cur.execute("INSERT INTO `history` (`user_id`, `username`, `password`, `port`, `group`, `is_connected`) VALUES (%s, %s, %s, %s, %s, %s)", (current_user.id, username, password, port, group, 1))
           mysql.connection.commit()
           cur.close()
           flash('User added successfully!')
