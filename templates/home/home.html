@@ -5,35 +5,55 @@
 {% block content %}
 <h1>Welcome, {{ user.username }}!</h1>
 
-<h1>User List</h1>
-<a href="/add">Add User</a>
-<table border="1">
-    <tr>
-        <th>Admin Username</th>
-        <th>Username</th>
-        <th>Port</th>
-        <th>Group</th>
-        <th>Connected</th>
-        <th>Date</th>
-    </tr>
-    {% for history in histories %}
-    <tr>
-        <td>{{ history[8] }}</td>
-        <td>{{ history[2] }}</td>
-        <td>{{ history[4] }}</td>
-        <td>{{ history[5] }}</td>
-        <td>
-          {% if history[6] == 1 %}
-            <p>Connected</p>
-          {% else %}
-            <p>Not Connected</p>
-          {% endif %}
-        </td>
-        <td>{{ history[7] }}</td>
-        <td>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="container">
+  <form method="GET" action="/">
+    <div class="row mb-4">
+      <div class="col-4">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">#</span>
+          </div>
+          <input type="text" class="form-control" name="search" value="{{ search or '' }}" placeholder="Search" aria-label="Search" aria-describedby="basic-addon1">
+        </div>
+      </div>
+      <div class="col-4">
+        <button class="btn btn-primary" type="submit">Search</button>
+      </div>
+    </div>
+  </form>
+  
+  <table class="table table-striped">
+    <thead>
+      <tr>
+          <th>Admin</th>
+          <th>Username</th>
+          <th>Port</th>
+          <th>Group</th>
+          <th>Connected</th>
+          <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for history in histories %}
+      <tr>
+          <td>{{ history[8] }}</td>
+          <td>{{ history[2] }}</td>
+          <td>{{ history[4] }}</td>
+          <td>{{ history[5] }}</td>
+          <td>
+            {% if history[6] == 1 %}
+              <p>Connected</p>
+            {% else %}
+              <p>Not Connected</p>
+            {% endif %}
+          </td>
+          <td>{{ history[7] }}</td>
+          <td>
+          </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 {% endblock %}

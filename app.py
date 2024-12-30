@@ -79,16 +79,23 @@ def register():
 @app.route('/')
 @login_required
 def home():
+    search = request.args.get('search')
     cur = mysql.connection.cursor()
-    query = """
-        SELECT history.*, users.username FROM history
-        LEFT JOIN users ON users.id = history.user_id
-    """
-    cur.execute(query)
+    if search:
+        query = """SELECT history.*, users.username FROM history
+            LEFT JOIN users ON users.id = history.user_id
+            WHERE history.username LIKE %s OR port LIKE %s
+        """
+        cur.execute(query, (f"%{search}%", f"%{search}%"))
+    else:
+      query = """
+          SELECT history.*, users.username FROM history
+          LEFT JOIN users ON users.id = history.user_id
+      """
+      cur.execute(query)
     history = cur.fetchall()
-    print(history)
     cur.close()
-    return render_template('home/home.html', title="Home", user=current_user, histories=history)
+    return render_template('home/home.html', title="Home", user=current_user, histories=history, search=search)
 
 @app.route('/add-user', methods=['GET', 'POST'])
 @login_required
