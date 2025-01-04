@@ -77,53 +77,100 @@ def register():
           return redirect(url_for('login'))
     return render_template('auth/register.html', title="Register")
 
+def getTotalPage(cur, per_page, search):
+    # Count total matching records
+    if search:
+        count_query = """
+          SELECT COUNT(*) FROM history
+          LEFT JOIN users ON users.id = history.user_id
+          WHERE users.username LIKE %s OR history.username LIKE %s OR port LIKE %s
+        """
+        cur.execute(count_query, (f"%{search}%", f"%{search}%", f"%{search}%"))
+    else:
+        count_query = "SELECT COUNT(*) FROM history"
+        cur.execute(count_query)
+    total_results = cur.fetchone()[0]
+    total_pages = math.ceil(total_results / per_page)
+    
+    return total_pages
+  
+def searchHistory(cur, sort_column, sort_order, per_page, offset, search):
+    # Fetch paginated results
+    if search:
+        query = f"""SELECT history.*, users.username FROM history
+            LEFT JOIN users ON users.id = history.user_id
+            WHERE users.username LIKE %s OR history.username LIKE %s OR port LIKE %s
+            ORDER BY {sort_column} {sort_order}
+            LIMIT {per_page} OFFSET {offset}
+        """
+        cur.execute(query, (f"%{search}%", f"%{search}%", f"%{search}%"))
+    else:
+      query = f"""
+          SELECT history.*, users.username FROM history
+          LEFT JOIN users ON users.id = history.user_id
+          ORDER BY {sort_column} {sort_order}
+          LIMIT {per_page} OFFSET {offset}
+      """
+      cur.execute(query)
+    results = cur.fetchall()
+    
+    return results
+
+# Mapping for sort keys
+SORT_MAP = {
+  'username': 'history.username',
+  'port': 'port',
+  'group': 'history.group',
+  'date': 'created_at'
+}
+
 @app.route('/')
 @login_required
 def home():
     search = request.args.get('search')
-    page = int(request.args.get('page', 1))  # Current page (default 1)
+    page = int(request.args.get('page', 1))
     per_page = 10  # Results per page
     offset = (page - 1) * per_page  # Calculate OFFSET for SQL query
     
+    # Sorting parameters
+    sort_by = request.args.get('sort_by', 'date')
+    sort_order = request.args.get('sort_order', 'desc')
+    
+    # Ensure valid sorting columns and orders
+    if sort_by not in SORT_MAP:
+        sort_by = 'created_at'
+    sort_column = SORT_MAP[sort_by]
+    print(sort_column)
+    if sort_order not in ['asc', 'desc']:
+        sort_order = 'desc'
+        
     cur = mysql.connection.cursor()
     
-    # Count total matching records
-    if search:
-        count_query = "SELECT COUNT(*) FROM history WHERE username LIKE %s OR port LIKE %s"
-        cur.execute(count_query, (f"%{search}%", f"%{search}%"))
-    else:
-        count_query = "SELECT COUNT(*) FROM history"
-        cur.execute(count_query)
+    total_pages = getTotalPage(cur, per_page, search)
+    results = searchHistory(cur, sort_column, sort_order, per_page, offset, search)
     
-    total_results = cur.fetchone()[0]
-    print(total_results)
-    total_pages = math.ceil(total_results / per_page)
-    
-    # Fetch paginated results
-    if search:
-        query = """SELECT history.*, users.username FROM history
-            LEFT JOIN users ON users.id = history.user_id
-            WHERE history.username LIKE %s OR port LIKE %s
-            LIMIT %s OFFSET %s
-        """
-        cur.execute(query, (f"%{search}%", f"%{search}%", per_page, offset))
-    else:
-      query = """
-          SELECT history.*, users.username FROM history
-          LEFT JOIN users ON users.id = history.user_id
-          LIMIT %s OFFSET %s
-      """
-      cur.execute(query, (per_page, offset))
-    history = cur.fetchall()
+    histories = [
+      {
+        'admin': row[8],
+        'username': row[2],
+        'port': row[4],
+        'group': row[5],
+        'connected': row[6],
+        'date': row[7]
+      } for row in results
+    ]
+
     cur.close()
     return render_template(
       'home/home.html',
       title="Home",
       user=current_user,
-      histories=history,
+      histories=histories,
       search=search,
       page=page,
-      total_pages=total_pages
+      total_pages=total_pages,
+      sort_by=sort_by,
+      sort_order=sort_order
     )
 
 @app.route('/add-user', methods=['GET', 'POST'])
@@ -148,6 +195,11 @@ def addUser():
 @login_required
 def blockByPort():
     return render_template('home/block-by-port.html', title="Block by Port")
+  
+@app.route('/customers')
+@login_required
+def customers():
+    return render_template('home/customers.html', title="Customer", data=[])
   
 # Logout Route
 @app.route('/logout')

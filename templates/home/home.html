@@ -3,6 +3,23 @@
 {% block title %} {{ title }} {% endblock %}
 
 {% block content %}
+<style>
+  table {
+    width: 50%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  th a {
+    cursor: pointer;
+    text-decoration: none;
+    color: black;
+  }
+</style>
+
 <h1>Welcome, {{ user.username }}!</h1>
 
 <div class="container">
@@ -25,51 +42,108 @@
   <table class="table table-striped">
     <thead>
       <tr>
-          <th>Admin</th>
-          <th>Username</th>
-          <th>Port</th>
-          <th>Group</th>
+          <th>
+            <a href="{{ 
+              url_for('home',
+                search=search,
+                sort_by='admin',
+                sort_order='desc'
+                if sort_by == 'admin' and sort_order == 'asc' else 'asc',
+                page=page
+              ) 
+            }}">
+              Admin {% if sort_by == 'admin' %} ({{ sort_order }}) {% endif %}
+            </a>
+          </th>
+          <th>
+            <a href="{{ 
+              url_for('home',
+                search=search,
+                sort_by='username',
+                sort_order='desc'
+                if sort_by == 'username' and sort_order == 'asc' else 'asc',
+                page=page
+              ) 
+            }}">
+              Username {% if sort_by == 'username' %} ({{ sort_order }}) {% endif %}
+            </a>
+          </th>
+          <th>
+            <a href="{{ 
+              url_for('home',
+                search=search,
+                sort_by='port',
+                sort_order='desc'
+                if sort_by == 'port' and sort_order == 'asc' else 'asc',
+                page=page
+              ) 
+            }}">
+              Port {% if sort_by == 'port' %} ({{ sort_order }}) {% endif %}
+            </a>
+          </th>
+          <th>
+            <a href="{{ 
+              url_for('home',
+                search=search,
+                sort_by='group',
+                sort_order='desc'
+                if sort_by == 'group' and sort_order == 'asc' else 'asc',
+                page=page
+              ) 
+            }}">
+              Group {% if sort_by == 'group' %} ({{ sort_order }}) {% endif %}
+            </a>
+          </th>
           <th>Connected</th>
-          <th>Date</th>
+          <th>
+            <a href="{{ 
+              url_for('home',
+                search=search,
+                sort_by='date',
+                sort_order='desc'
+                if sort_by == 'date' and sort_order == 'asc' else 'asc',
+                page=page
+              ) 
+            }}">
+              Date {% if sort_by == 'date' %} ({{ sort_order }}) {% endif %}
+            </a>
+          </th>
       </tr>
     </thead>
     <tbody>
       {% for history in histories %}
       <tr>
-          <td>{{ history[8] }}</td>
-          <td>{{ history[2] }}</td>
-          <td>{{ history[4] }}</td>
-          <td>{{ history[5] }}</td>
+          <td>{{ history.admin }}</td>
+          <td>{{ history.username }}</td>
+          <td>{{ history.port }}</td>
+          <td>{{ history.group }}</td>
           <td>
-            {% if history[6] == 1 %}
+            {% if history.connected == 1 %}
               <p>Connected</p>
             {% else %}
               <p>Not Connected</p>
             {% endif %}
           </td>
-          <td>{{ history[7] }}</td>
-          <td>
-          </td>
+          <td>{{ history.date }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
-
   <!-- Pagination -->
   <nav>
     {% if total_pages > 1 %}
-    <ul class="pagination">
+    <ul class="pagination justify-content-end">
       {% if page > 1 %}
       <li class="page-item">
-        <a href="{{ url_for('home', search=search, page=page-1) }}"
+        <a href="{{ url_for('home', search=search, sort_by=sort_by, sort_order=sort_order, page=page-1) }}"
             class="page-link">&laquo; Previous</a>
       </li>
       {% endif %}
       
       {% for p in range(1, total_pages + 1) %}
         <li class="page-item {% if p == page %}active{% endif %}">
-          <a href="{{ url_for('home', search=search, page=p) }}" 
+          <a href="{{ url_for('home', search=search, sort_by=sort_by, sort_order=sort_order, page=p) }}" 
             class="page-link">
               {{ p }}
           </a>
@@ -78,7 +152,7 @@
       
       {% if page < total_pages %}
       <li class="page-item">
-        <a href="{{ url_for('home', search=search, page=page+1) }}"
+        <a href="{{ url_for('home', search=search, sort_by=sort_by, sort_order=sort_order, page=page+1) }}"
           class="page-link">Next &raquo;</a>
       </li>
       {% endif %}
